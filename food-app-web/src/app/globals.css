@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-fixed: #ffdbd0;
+  --color-on-primary-fixed-variant: #832600;
+  
+  --color-tertiary-fixed: #c5ef9f;
+  --color-on-tertiary-fixed-variant: #2e4f11;
+  
+  --color-secondary-fixed: #e8e2d4;
+  --color-on-secondary-fixed-variant: #49473d;
+  
+  --color-surface-container-highest: #e9e1dc;
+  --color-on-surface-variant: #594139;
+
+  --color-surface-container-low: #f7f2ef;   
+  
+  --font-body: var(--font-be-vietnam), ui-sans-serif, system-ui;
+  --color-primary: #ab3500;
+  --color-surface: #fff8f5;
+  --color-tertiary: #456827;
+  --color-primary-container: #ff6b35;
+}
+/* Ẩn thanh cuộn cho toàn bộ các phần tử có class .scrollbar-hide */
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-on-background);
+    position: relative;
+    overflow-x: hidden;
+    min-height: 100vh; 
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCCN9Q6l-2Rs0XRJBIYTUzsvIZODpZSS2KMqYC4-ifoC6FM_h3M2Ye7jzmZhzD-_ObT5e8ui1LNfe741rdEAYapmhB5IPQAnT2G7AG-joGBywah2NsJNSZ4EEvQ6T0BsBOp75wQSEemz6QbVzBUxKzWU2iWd9nb6SnPFKamAgRHTPBgJtTeDFARJBrBTjbt5QztEOmEZcWpBpZENRqF6RBiOLe6OIz7u3LWIrM_bEMUnVAQO4lES9NiTWA6ct4GEdMGbx8L9G-aCuo);
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: 
+      radial-gradient(circle at 15% 15%, rgba(171, 53, 0, 0.12) 0%, transparent 35%),
+      radial-gradient(circle at 85% 25%, rgba(69, 104, 39, 0.08) 0%, transparent 35%),
+      radial-gradient(circle at 50% 60%, rgba(255, 107, 53, 0.06) 0%, transparent 45%);
+    filter: blur(60px);
+    pointer-events: none;
+  }
+}
