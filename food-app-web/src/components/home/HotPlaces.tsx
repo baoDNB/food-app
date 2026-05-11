@@ -47,8 +47,10 @@ export default function HotPlaces() {
 
   const loadData = useCallback(async () => {
     try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
       setLoading(true);
-      const response = await axios.get('http://127.0.0.1:8000/api/places');
+      const response = await axios.get(`${apiUrl}/api/places`);
       setPlaces(response.data);
     } catch (error) {
       console.error("Lỗi khi kết nối Backend:", error);

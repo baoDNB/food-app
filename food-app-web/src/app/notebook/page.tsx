@@ -11,7 +11,9 @@ export default function NotebookPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('http://127.0.0.1:8000/api/places')
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+        fetch(`${apiUrl}/api/places`)
             .then(res => res.json())
             .then(data => {
                 setPlaces(data);
@@ -42,11 +44,10 @@ export default function NotebookPage() {
             <div className="flex items-center justify-center gap-12 mb-12 border-b border-zinc-100">
                 <button
                     onClick={() => setActiveTab('wishlist')}
-                    className={`pb-4 px-2 font-bold transition-all relative ${
-                        activeTab === 'wishlist' 
-                        ? "text-orange-600" 
-                        : "text-zinc-400 hover:text-zinc-600"
-                    }`}
+                    className={`pb-4 px-2 font-bold transition-all relative ${activeTab === 'wishlist'
+                            ? "text-orange-600"
+                            : "text-zinc-400 hover:text-zinc-600"
+                        }`}
                 >
                     Wishlist
                     {activeTab === 'wishlist' && (
@@ -55,11 +56,10 @@ export default function NotebookPage() {
                 </button>
                 <button
                     onClick={() => setActiveTab('diary')}
-                    className={`pb-4 px-2 font-bold transition-all relative ${
-                        activeTab === 'diary' 
-                        ? "text-orange-600" 
-                        : "text-zinc-400 hover:text-zinc-600"
-                    }`}
+                    className={`pb-4 px-2 font-bold transition-all relative ${activeTab === 'diary'
+                            ? "text-orange-600"
+                            : "text-zinc-400 hover:text-zinc-600"
+                        }`}
                 >
                     Nhật ký của tôi
                     {activeTab === 'diary' && (
@@ -91,14 +91,14 @@ export default function NotebookPage() {
                         )}
 
                         {filteredPlaces.map((item, index) => (
-                            <div 
-                                key={item.id} 
+                            <div
+                                key={item.id}
                                 className={activeTab === 'diary' ? "md:col-span-6" : "md:col-span-4"}
                             >
-                                <PlaceCard 
-                                    item={item} 
-                                    index={index} 
-                                    setPlaces={setPlaces} 
+                                <PlaceCard
+                                    item={item}
+                                    index={index}
+                                    setPlaces={setPlaces}
                                 />
                             </div>
                         ))}

@@ -39,41 +39,43 @@ export const PlaceCard = ({ item, index = 0, setPlaces, variant = 'diary' }: Pla
 
     // Hàm xử lý thả tim
     const toggleFavorite = async (id: number, e: React.MouseEvent) => {
-            e.preventDefault();
-            
-            // FIX GẠCH ĐỎ: Kiểm tra xem setPlaces có được truyền vào không
-            if (!setPlaces) return;
+        e.preventDefault();
 
-            const newStatus = !(item.experience?.will_return || false);
+        // FIX GẠCH ĐỎ: Kiểm tra xem setPlaces có được truyền vào không
+        if (!setPlaces) return;
 
-            // Update UI nhanh (Optimistic Update)
-            // Ép kiểu p: Place để trùng khớp với Interface của bạn
-            setPlaces((prev: Place[]) => prev.map(p => 
-                p.id === id 
-                    ? { 
-                        ...p, 
-                        experience: { ...(p.experience || {}), will_return: newStatus } 
-                    } 
-                    : p
-            ));
+        const newStatus = !(item.experience?.will_return || false);
 
-            try {
-                // Dùng axios hoặc fetch đều được, nhưng hãy dùng đúng URL
-                const res = await fetch(`http://127.0.0.1:8000/api/places/${id}/favorite`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ will_return: newStatus })
-                });
-                
-                if (!res.ok) throw new Error('Server error');
-            } catch (err) {
-                console.error("Lưu DB thất bại:", err);
-                // Có thể rollback UI ở đây nếu cần
-            }
-        };
+        // Update UI nhanh (Optimistic Update)
+        // Ép kiểu p: Place để trùng khớp với Interface của bạn
+        setPlaces((prev: Place[]) => prev.map(p =>
+            p.id === id
+                ? {
+                    ...p,
+                    experience: { ...(p.experience || {}), will_return: newStatus }
+                }
+                : p
+        ));
+
+        try {
+            // Dùng axios hoặc fetch đều được, nhưng hãy dùng đúng URL
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+            const res = await fetch(`${apiUrl}/api/places/${id}/favorite`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ will_return: newStatus })
+            });
+
+            if (!res.ok) throw new Error('Server error');
+        } catch (err) {
+            console.error("Lưu DB thất bại:", err);
+            // Có thể rollback UI ở đây nếu cần
+        }
+    };
     const FavoriteButton = () => (
         <button
             onClick={(e) => toggleFavorite(item.id, e)}
