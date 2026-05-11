@@ -117,7 +117,7 @@ class PlaceController extends Controller
 
                 case 'group':
                     // Rủ thêm bạn bè: Cần không gian rộng, chấp nhận được tiếng ồn
-                    $query->where('vibe_fit', '>=', 50)     // Phù hợp nhóm đông
+                    $query->where('vibe_fit', '>=', 50  )     // Phù hợp nhóm đông
                         ->where('vibe_density', '>=', 50); // Thường là chỗ nhộn nhịp
                     break;
 

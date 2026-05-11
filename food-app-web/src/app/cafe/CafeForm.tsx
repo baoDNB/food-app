@@ -50,7 +50,6 @@ export default function CafeForm({ initialData, onClose, onSuccess }: CafeFormPr
             const payload = {
                 ...formData,
                 category: formData.category.join(','),
-                // Gộp checklist vào đúng cấu trúc experience
                 experience: {
                     is_visited: checklist.is_visited ? 1 : 0,
                     tried_signature: checklist.tried_signature ? 1 : 0,
@@ -59,8 +58,7 @@ export default function CafeForm({ initialData, onClose, onSuccess }: CafeFormPr
                 },
                 _method: 'PUT'
             };
-            console.log("Dữ liệu gửi đi:", payload);
-            // Sử dụng Method Spoofing cho Laravel (_method: 'PUT')
+                // Sử dụng Method Spoofing cho Laravel (_method: 'PUT')
             const res = await fetch(`${apiUrl}/api/places/${initialData.id}`, {
                 method: 'POST',
                 headers: {

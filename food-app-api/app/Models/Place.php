@@ -15,7 +15,7 @@ class Place extends Model
         'description', 'vibe_sound', 'vibe_density', 'vibe_fit', 'checklist', 'visited', 'is_favorite', 'city', 'district'
     ];
     protected $casts = [
-        'checklist' => 'array', // Tự động chuyển đổi JSON thành Array/Object cho bạn
+        'checklist' => 'array', 
         'visited' => 'boolean',
         'category' => 'array',
     ];
