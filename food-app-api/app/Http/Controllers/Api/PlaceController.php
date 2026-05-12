@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Place;
 use Illuminate\Http\Request;
 use App\Models\UserExperience; 
-use Illuminate\Validation\Rule;
 
 class PlaceController extends Controller
 {
@@ -91,55 +90,42 @@ class PlaceController extends Controller
         $path = $file->store('places', 'public');
         return asset('storage/' . $path);
     }
-
     public function index(Request $request){
-        $validated = $request->validate([
-            'vibe' => ['nullable', Rule::in(['deadline', 'solo', 'group', 'quiet'])],
-            'tab'  => ['nullable', Rule::in(['wishlist'])],
-            'limit' => ['nullable', 'integer', 'min:1', 'max:24'],
-        ]);
+        $query = Place::with('experience');
 
-        $limit = $validated['limit'] ?? 6;
-        $vibe  = $validated['vibe'] ?? null;
-        $tab   = $validated['tab'] ?? null;
-
-        $vibeFilters = [
-            'deadline' => [
-                ['vibe_sound', '<=', 30],
-                ['vibe_density', '<=', 40],
-            ],
-            'solo' => [
-                ['vibe_fit', '<=', 30],
-                ['vibe_sound', '<=', 50],
-            ],
-            'group' => [
-                ['vibe_fit', '>=', 50],
-                ['vibe_density', '>=', 50],
-            ],
-            'quiet' => [
-                ['vibe_sound', '<=', 20],
-                ['vibe_density', '<=', 30],
-            ],
-        ];
-
-        $query = Place::query()
-            ->with(['experience:id,place_id,will_return'])
-            ->when($vibe, function ($q) use ($vibe, $vibeFilters) {
-                foreach ($vibeFilters[$vibe] as [$column, $operator, $value]) {
-                    $q->where($column, $operator, $value);
-                }
-            })
-            ->when($tab === 'wishlist', function ($q) {
-                $q->whereHas('experience', function ($exp) {
-                    $exp->where('will_return', true);
-                });
+        if ($request->has('vibe')) {
+            $vibe = $request->vibe;
+            switch ($vibe) {
+                case 'deadline':
+                    $query->where('vibe_sound', '<=', 30)   
+                        ->where('vibe_density', '<=', 40); 
+                    break;
+                case 'solo':
+                    $query->where('vibe_fit', '<=', 30)    
+                        ->where('vibe_sound', '<=', 50);
+                    break;
+                case 'group':
+                    $query->where('vibe_fit', '>=', 50  )    
+                        ->where('vibe_density', '>=', 50);
+                    break;
+                case 'quiet':
+                    $query->where('vibe_sound', '<=', 20)
+                        ->where('vibe_density', '<=', 30);
+                    break;
+            }
+        }
+        if ($request->tab == 'wishlist') {
+            $query->whereHas('experience', function($q) {
+                $q->where('will_return', true);
             });
+        }
 
-        $places = $vibe
-            ? $query->inRandomOrder()->limit($limit)->get()
-            : $query->latest('id')->paginate($limit);
+        // Trả về kết quả
+        if ($request->has('vibe')) {
+            return response()->json($query->inRandomOrder()->limit(6)->get());
+        }
 
-        return response()->json($places);
+        return response()->json($query->latest()->get());
     }
 
     public function show($id){
