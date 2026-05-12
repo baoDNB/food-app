@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y \
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
+# Tạo thư mục database và file sqlite trống
+RUN mkdir -p database && touch database/database.sqlite && chmod -R 777 database
 
 COPY . .
 
