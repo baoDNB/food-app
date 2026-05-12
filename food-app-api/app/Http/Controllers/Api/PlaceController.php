@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Place;
 use Illuminate\Http\Request;
 use App\Models\UserExperience; 
+use Illuminate\Validation\Rule;
 
 class PlaceController extends Controller
 {
     // Hàm này xử lý yêu cầu lưu từ Next.js
-    public function store(Request $request)
-    {
+    public function store(Request $request){
         // 1. Kiểm tra validation cơ bản
         if (!$request->name || !$request->address) {
             return response()->json(['status' => 'error', 'message' => 'Điền thiếu tên hoặc địa chỉ rồi!'], 400);
@@ -85,67 +85,64 @@ class PlaceController extends Controller
             'id' => $place->id
         ], 201);
     }
-
-    // Hàm hỗ trợ upload ảnh (bạn cần bổ sung logic này)
-    private function uploadService($file)
-    {
+    // Hàm hỗ trợ upload ảnh 
+    private function uploadService($file){
         if (!$file) return null;
         $path = $file->store('places', 'public');
         return asset('storage/' . $path);
     }
-    // app/Http/Controllers/Api/PlaceController.php
-    public function index(Request $request)
-    {
-        $query = Place::with('experience');
 
-        // Logic lọc theo Mood (Fake AI) dựa trên 3 chỉ số Vibe
-        if ($request->has('vibe')) {
-            $vibe = $request->vibe;
+    public function index(Request $request){
+        $validated = $request->validate([
+            'vibe' => ['nullable', Rule::in(['deadline', 'solo', 'group', 'quiet'])],
+            'tab'  => ['nullable', Rule::in(['wishlist'])],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:24'],
+        ]);
 
-            switch ($vibe) {
-                case 'deadline':
-                    // Cần yên tĩnh tuyệt đối và vắng vẻ để tập trung
-                    $query->where('vibe_sound', '<=', 30)   // Âm thanh thấp
-                        ->where('vibe_density', '<=', 40); // Độ đông đúc thấp
-                    break;
+        $limit = $validated['limit'] ?? 6;
+        $vibe  = $validated['vibe'] ?? null;
+        $tab   = $validated['tab'] ?? null;
 
-                case 'solo':
-                    // Đi một mình: Cần không gian nhỏ gọn, không quá ồn
-                    $query->where('vibe_fit', '<=', 30)     // Phù hợp đi 1 mình
-                        ->where('vibe_sound', '<=', 50);
-                    break;
+        $vibeFilters = [
+            'deadline' => [
+                ['vibe_sound', '<=', 30],
+                ['vibe_density', '<=', 40],
+            ],
+            'solo' => [
+                ['vibe_fit', '<=', 30],
+                ['vibe_sound', '<=', 50],
+            ],
+            'group' => [
+                ['vibe_fit', '>=', 50],
+                ['vibe_density', '>=', 50],
+            ],
+            'quiet' => [
+                ['vibe_sound', '<=', 20],
+                ['vibe_density', '<=', 30],
+            ],
+        ];
 
-                case 'group':
-                    // Rủ thêm bạn bè: Cần không gian rộng, chấp nhận được tiếng ồn
-                    $query->where('vibe_fit', '>=', 50  )     // Phù hợp nhóm đông
-                        ->where('vibe_density', '>=', 50); // Thường là chỗ nhộn nhịp
-                    break;
-
-                case 'quiet':
-                    // Cần chỗ chữa lành: Ưu tiên âm thanh cực thấp và vắng khách
-                    $query->where('vibe_sound', '<=', 20)
-                        ->where('vibe_density', '<=', 30);
-                    break;
-            }
-        }
-
-        // Logic phân tab wishlist của bạn (giữ nguyên)
-        if ($request->tab == 'wishlist') {
-            $query->whereHas('experience', function($q) {
-                $q->where('will_return', true);
+        $query = Place::query()
+            ->with(['experience:id,place_id,will_return'])
+            ->when($vibe, function ($q) use ($vibe, $vibeFilters) {
+                foreach ($vibeFilters[$vibe] as [$column, $operator, $value]) {
+                    $q->where($column, $operator, $value);
+                }
+            })
+            ->when($tab === 'wishlist', function ($q) {
+                $q->whereHas('experience', function ($exp) {
+                    $exp->where('will_return', true);
+                });
             });
-        }
 
-        // Trả về kết quả
-        // Nếu là AI search thì ưu tiên ngẫu nhiên để đổi mới kết quả mỗi lần quét
-        if ($request->has('vibe')) {
-            return response()->json($query->inRandomOrder()->limit(6)->get());
-        }
+        $places = $vibe
+            ? $query->inRandomOrder()->limit($limit)->get()
+            : $query->latest('id')->paginate($limit);
 
-        return response()->json($query->latest()->get());
+        return response()->json($places);
     }
-    public function show($id)
-    {
+
+    public function show($id){
         // Lấy quán ăn kèm theo checklist (experience)
         $place = Place::with('experience')->find($id);
 
@@ -155,8 +152,8 @@ class PlaceController extends Controller
 
         return response()->json($place);
     }
-    public function toggleFavorite(Request $request, $id)
-    {
+
+    public function toggleFavorite(Request $request, $id){
         try {
             // Log thử xem dữ liệu Next.js gửi lên có đúng không
             \Log::info("Place ID: $id - Status: " . $request->will_return);
@@ -177,33 +174,39 @@ class PlaceController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-    public function update(Request $request, $id)
-        {
-            $place = Place::find($id);
-            if (!$place) {
-                return response()->json(['message' => 'Không tìm thấy quán'], 404);
-            }
 
-            $place->update($request->all());
-            if ($request->has('experience')) {
-                $expData = $request->input('experience');
-                $place->experience()->updateOrCreate(
-                    ['place_id' => $id], 
-                    [
-                        'is_visited'      => (int)($expData['is_visited'] ?? 0),
-                        'tried_signature' => (int)($expData['tried_signature'] ?? 0),
-                        'took_photo'      => (int)($expData['took_photo'] ?? 0),
-                        'will_return'     => (int)($expData['will_return'] ?? 0),
-                    ]
-                );
-            }
-            return response()->json([
-                'message' => 'Cập nhật thành công',
-                'data' => $place->load('experience') 
-            ]);
+    public function update(Request $request, $id){
+        $place = Place::find($id);
+        if (!$place) {
+            return response()->json(['message' => 'Không tìm thấy quán'], 404);
         }
-    public function notes()
-    {
+
+        $place->update($request->all());
+        if ($request->has('experience')) {
+            $expData = $request->input('experience');
+            $place->experience()->updateOrCreate(
+                ['place_id' => $id], 
+                [
+                    'is_visited'      => (int)($expData['is_visited'] ?? 0),
+                    'tried_signature' => (int)($expData['tried_signature'] ?? 0),
+                    'took_photo'      => (int)($expData['took_photo'] ?? 0),
+                    'will_return'     => (int)($expData['will_return'] ?? 0),
+                ]
+            );
+        }
+        return response()->json([
+            'message' => 'Cập nhật thành công',
+            'data' => $place->load('experience') 
+        ]);
+    }
+
+    public function notes(){
         return $this->hasMany(Note::class);
+    }
+
+    public function destroy($id) {
+        $place = Place::findOrFail($id); // Tìm không thấy sẽ tự văng 404
+        $place->delete();
+        return response()->json(['message' => 'Xoá rồi nhé!']);
     }
 }

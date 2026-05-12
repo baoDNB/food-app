@@ -6,6 +6,7 @@ import axios from 'axios';
 import { Plus, Sparkles, BookOpen, ChevronDown } from "lucide-react";
 import { PlaceCard } from '../notebook/PlaceCard';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 
 // Interface rõ ràng cho dữ liệu quán ăn
 interface Place {
@@ -16,6 +17,7 @@ interface Place {
   tag: string;
   image: string;
 }
+
 
 const categories = [
   { label: "Tất cả", icon: "✨" },
@@ -37,6 +39,10 @@ const PlaceSkeleton = () => (
 );
 
 export default function HotPlaces() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const fetchPlaces = async () => {
+  };
   const [places, setPlaces] = useState<Place[]>([]);
   const [activeCategory, setActiveCategory] = useState("Tất cả");
   const [loading, setLoading] = useState(true);
@@ -158,10 +164,13 @@ export default function HotPlaces() {
                   <p className="text-zinc-400 italic mt-2 text-center max-w-xs">
                     Trang sổ tay cho <span className="text-orange-500 font-semibold">"{activeCategory}"</span> vẫn đang đợi bạn viết tiếp.
                   </p>
-                  <button className="mt-8 bg-zinc-900 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-orange-600 hover:shadow-orange-200 transition-all flex items-center gap-2 group">
+                  <Link
+                    href="/notebook/new"
+                    className="mt-8 bg-zinc-900 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-orange-600 hover:shadow-orange-200 transition-all flex items-center gap-2 group"
+                  >
                     <Plus size={18} className="group-hover:rotate-90 transition-transform" />
-                    Thêm quán ngay
-                  </button>
+                    Thêm quán {activeCategory !== "Tất cả" ? `vào mục ${activeCategory}` : "ngay"}
+                  </Link>
                 </motion.div>
               )}
             </motion.div>

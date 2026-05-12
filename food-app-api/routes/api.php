@@ -15,4 +15,4 @@ Route::post('/places/{id}/favorite', [PlaceController::class, 'toggleFavorite'])
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/places/{id}/check', [PlaceController::class, 'updateChecklist']);
 });
-
+Route::delete('/places/{id}', [PlaceController::class, 'destroy']);

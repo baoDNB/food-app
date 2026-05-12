@@ -4,6 +4,7 @@ import { p } from 'framer-motion/client';
 import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import CafeForm from '../CafeForm';
+import { useRouter } from 'next/navigation';
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -12,11 +13,14 @@ interface PageProps {
 export default function CafeDetailPage({ params }: PageProps) {
     const resolvedParams = use(params);
     const id = resolvedParams.id;
+    const router = useRouter();
 
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // Quản lý popup xác nhận xoá
     const [place, setPlace] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [isMounted, setIsMounted] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false); // State quản lý Popup
+    const [showSuccess, setShowSuccess] = useState(false);
 
 
     const fetchDetail = async () => {
@@ -29,6 +33,29 @@ export default function CafeDetailPage({ params }: PageProps) {
             console.error("Lỗi lấy dữ liệu:", e);
         } finally {
             setLoading(false);
+        }
+    };
+    // Hàm này chỉ để mở Popup xác nhận
+    const confirmDelete = () => setIsDeleteModalOpen(true);
+
+    // Hàm thực hiện gọi API xoá thật sự
+    const executeDelete = async () => {
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+            const res = await fetch(`${apiUrl}/api/places/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setIsDeleteModalOpen(false); // Đóng modal xác nhận
+                setShowSuccess(true);        // Hiện thông báo thành công
+
+                // Đợi 2 giây để người dùng kịp nhìn rồi mới chuyển trang
+                setTimeout(() => {
+                    router.push('/');
+                    router.refresh();
+                }, 2000);
+            }
+        } catch (e) {
+            console.error(e);
         }
     };
 
@@ -57,14 +84,22 @@ export default function CafeDetailPage({ params }: PageProps) {
             <div className="h-[400px] relative">
                 <img src={place.image_url} className="w-full h-full object-cover" alt={place.name} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                <div className="absolute top-6 right-6 z-10">
+                <div className="absolute top-6 right-6 z-10 flex flex-row items-center gap-3">
                     <button
                         onClick={() => setIsModalOpen(true)} // Thay vì router.push
-                        className="bg-white/90 hover:bg-white text-[#ab3500] px-6 py-2.5 rounded-full flex items-center gap-2 shadow-xl transition-all font-bold"
+                        className="bg-[#ab3500] hover:bg-[#8e2c00] text-white px-5 py-2.5 rounded-full flex items-center gap-2 shadow-lg hover:shadow-2xl transition-all duration-300 font-bold border border-white/20"
                     >
                         <span className="material-symbols-outlined text-base">edit</span>
                         Chỉnh sửa quán
                     </button>
+                    <button
+                        onClick={confirmDelete} // Đổi từ handleDelete sang confirmDelete
+                        className="bg-white/90 hover:bg-red-50 text-red-600 px-4 py-2.5 rounded-full flex items-center gap-2 shadow-xl transition-all font-bold"
+                    >
+                        <span className="material-symbols-outlined text-base">delete</span>
+                        Xoá
+                    </button>
+
                 </div>
                 <div className="absolute bottom-8 left-0 right-0 max-w-6xl mx-auto px-4">
                     <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -234,11 +269,55 @@ export default function CafeDetailPage({ params }: PageProps) {
                     </div>
                 </div>
             )}
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsDeleteModalOpen(false)} />
+
+                    <div className="relative bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl text-center">
+                        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <span className="material-symbols-outlined text-red-500 text-4xl">delete_sweep</span>
+                        </div>
+
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Xác nhận xoá quán?</h3>
+                        <p className="text-gray-500 text-sm mb-8 leading-relaxed">
+                            Hành động này sẽ gỡ quán <span className="font-bold text-gray-800">"{place.name}"</span> khỏi sổ tay của bạn và không thể hoàn tác.
+                        </p>
+
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={executeDelete}
+                                className="w-full py-4 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold transition-colors shadow-lg shadow-red-200"
+                            >
+                                Đúng rồi, xoá đi
+                            </button>
+                            <button
+                                onClick={() => setIsDeleteModalOpen(false)}
+                                className="w-full py-4 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-2xl font-bold transition-colors"
+                            >
+                                Mình đổi ý rồi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {showSuccess && (
+                <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-white/80 backdrop-blur-md">
+                    <div className="text-center animate-in fade-in zoom-in duration-300">
+                        <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-100">
+                            <span className="material-symbols-outlined text-5xl animate-bounce">
+                                check_circle
+                            </span>
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Đã xoá thành công!</h2>
+                        <p className="text-gray-500">Đang đưa bạn quay lại trang chủ...</p>
+                    </div>
+                </div>
+            )}
+            
         </div>
     );
 }
 
-// Components nhỏ trợ giúp
 function VibeSlider({ label, left, right, val, icon, desc }: any) {
     return (
         <div className="bg-white p-5 rounded-2xl border border-gray-100">

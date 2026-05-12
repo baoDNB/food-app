@@ -94,55 +94,67 @@ export default function AddNewPlacePage() {
             return;
         }
 
-        const provinceName = provinces.find(p => String(p.code) === String(selectedProvince))?.name || "";
-        const districtName = districts.find(d => String(d.code) === String(selectedDistrict))?.name || "";
-
         setLoading(true);
         const data = new FormData();
+
+        // 1. Thêm các thông tin địa chỉ
+        const provinceName = provinces.find(p => String(p.code) === String(selectedProvince))?.name || "";
+        const districtName = districts.find(d => String(d.code) === String(selectedDistrict))?.name || "";
         data.append('city', provinceName);
         data.append('district', districtName);
 
-        // 2. TÁCH CATEGORY RA KHỎI VÒNG LẶP
+        // 2. Xử lý formData một cách thông minh
         Object.entries(formData).forEach(([key, value]) => {
-            if (key !== 'category') {
+            if (key === 'category' && Array.isArray(value)) {
+                // Gửi mảng theo kiểu Laravel hiểu: category[]
+                value.forEach((val) => data.append('category[]', val));
+            } else if (value !== null && value !== undefined) {
                 data.append(key, value.toString());
             }
         });
 
-        data.append('category', JSON.stringify(formData.category));
+        // 3. Gửi Checklist & Tags (Nếu Laravel nhận JSON thì giữ nguyên, hoặc dùng vòng lặp tương tự trên)
         data.append('checklist', JSON.stringify(checklist));
         data.append('tags', JSON.stringify(selectedTags));
 
+        // 4. Xử lý Hình ảnh
         if (imageFile) {
             data.append('image', imageFile);
         }
-
-        // ... phần fetch giữ nguyên ...
 
         try {
             const res = await fetch(`${apiUrl}/api/places`, {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
-                    // Lưu ý: KHÔNG set 'Content-Type' khi dùng FormData, trình duyệt sẽ tự tạo boundary
+                    // Tuyệt đối không set Content-Type ở đây
                 },
                 body: data,
             });
 
-            const responseData = await res.json();
+            // Kiểm tra xem phản hồi có phải JSON không trước khi parse
+            const contentType = res.headers.get("content-type");
+            let responseData;
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                responseData = await res.json();
+            } else {
+                const textError = await res.text();
+                throw new Error(`Server trả về định dạng không xác định: ${textError.substring(0, 100)}...`);
+            }
 
             if (res.ok) {
                 showToast("Đã lưu vào sổ tay thành công!", "success");
                 router.push(`/cafe/${responseData.id || ''}`);
                 router.refresh();
             } else {
-                console.error("Server Error:", responseData);
-                const errorMessage = responseData.message || JSON.stringify(responseData.errors);
-                showToast(`Lỗi từ Server: ${errorMessage}`, "error");
+                console.error("Server Validation Errors:", responseData.errors);
+                // Hiển thị lỗi validation cụ thể nếu có
+                const msg = responseData.message || "Lỗi lưu dữ liệu";
+                showToast(msg, "error");
             }
-        } catch (error) {
-            console.error("Lỗi kết nối:", error);
-            showToast("Không thể kết nối đến Server. Hãy kiểm tra xem Laravel đã chạy (php artisan serve) chưa.", "error");
+        } catch (error: any) {
+            console.error("Lỗi thực thi:", error);
+            showToast(error.message || "Không thể kết nối đến Server.", "error");
         } finally {
             setLoading(false);
         }
@@ -337,8 +349,8 @@ export default function AddNewPlacePage() {
             </main>
             {toast && (
                 <div className={`fixed bottom-10 left-10 z-[100] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl transition-all duration-500 animate-bounce-in-left ${toast.type === 'success' ? 'bg-[#456827] text-white' :
-                        toast.type === 'error' ? 'bg-[#ab3500] text-white' :
-                            'bg-[#f4a261] text-white'
+                    toast.type === 'error' ? 'bg-[#ab3500] text-white' :
+                        'bg-[#f4a261] text-white'
                     }`}>
                     <span className="material-symbols-outlined">
                         {toast.type === 'success' ? 'check_circle' : toast.type === 'error' ? 'error' : 'warning'}

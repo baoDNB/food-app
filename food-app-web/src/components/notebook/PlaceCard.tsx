@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { MapPin, CalendarDays, ArrowRight, Heart } from "lucide-react";
-import axios from "axios";
-import { i } from "framer-motion/client";
+
 
 interface Place {
     id: number;

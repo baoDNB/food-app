@@ -36,7 +36,7 @@ export const ProfileHeader = ({ stats, loading }: ProfileHeaderProps) => (
           />
           
           {/* MÓN ĐÃ THỬ: Bạn có thể giữ số tĩnh hoặc tính tương tự */}
-          <StatCard count={50} label="Món đã thử" colorClass="text-tertiary" />
+          <StatCard count={0} label="Món đã thử" colorClass="text-tertiary" />
           
           {/* QUÁN YÊU THÍCH: Lấy từ database */}
           <StatCard 

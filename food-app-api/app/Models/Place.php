@@ -19,16 +19,11 @@ class Place extends Model
         'visited' => 'boolean',
         'category' => 'array',
     ];
-
     // Quan hệ 1:1 với bảng UserExperience (Lưu checklist)
     public function experience()
     {
         return $this->hasOne(UserExperience::class);
     }
 
-    // Quan hệ N:N với bảng Tag (Lưu các thẻ phân loại)
-    public function tags()
-    {
-        return $this->belongsToMany(Tag::class);
-    }
+
 }
