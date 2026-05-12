@@ -13,6 +13,14 @@ export default function CafeForm({ initialData, onClose, onSuccess }: CafeFormPr
     const [previewUrl, setPreviewUrl] = useState(initialData?.image_url || "");
 
     // Khởi tạo formData từ initialData truyền xuống
+    const getInitialCategories = () => {
+        if (!initialData?.category) return [];
+        if (Array.isArray(initialData.category)) return initialData.category;
+        if (typeof initialData.category === 'string') {
+            return initialData.category.split(',').filter(Boolean);
+        }
+        return [];
+    };
     const [formData, setFormData] = useState({
         name: initialData?.name || "",
         address: initialData?.address || "",
@@ -22,8 +30,7 @@ export default function CafeForm({ initialData, onClose, onSuccess }: CafeFormPr
         vibe_sound: initialData?.vibe_sound || 50,
         vibe_density: initialData?.vibe_density || 50,
         vibe_fit: initialData?.vibe_fit || 50,
-        category: initialData?.category ? initialData.category.split(',') : [],
-
+        category: getInitialCategories(),
     });
 
     const [checklist, setChecklist] = useState({
@@ -58,7 +65,7 @@ export default function CafeForm({ initialData, onClose, onSuccess }: CafeFormPr
                 },
                 _method: 'PUT'
             };
-                // Sử dụng Method Spoofing cho Laravel (_method: 'PUT')
+            // Sử dụng Method Spoofing cho Laravel (_method: 'PUT')
             const res = await fetch(`${apiUrl}/api/places/${initialData.id}`, {
                 method: 'POST',
                 headers: {
