@@ -10,10 +10,16 @@ export default function RandomPickerPage() {
     const [isSpinning, setIsSpinning] = useState(false);
 
     useEffect(() => {
-        fetch('http://127.0.0.1:8000/api/places')
-            .then(res => res.json())
-            .then(data => setPlaces(data))
-            .catch(err => console.error(err));
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+        const fetchUrl = `${API_BASE_URL.replace(/\/$/, '')}/api/places`;
+
+        fetch(fetchUrl)
+            .then(res => {
+                if (!res.ok) throw new Error("API sập");
+                return res.json();
+            })
+            .then(data => setPlaces(Array.isArray(data) ? data : []))
+            .catch(err => console.error("Lỗi lấy dữ liệu:", err));
     }, []);
 
     const pickRandom = () => {
@@ -48,7 +54,7 @@ export default function RandomPickerPage() {
                 ) : selectedPlace ? (
                     <div className="animate-in zoom-in duration-500">
                         <div className="relative w-48 h-48 mx-auto mb-6">
-                            <img 
+                            <img
                                 src={selectedPlace.image_url || selectedPlace.image}
                                 className="w-full h-full object-cover rounded-[2rem] rotate-3 shadow-lg"
                             />
@@ -70,7 +76,7 @@ export default function RandomPickerPage() {
                 ) : (
                     <div className="py-20">
                         <p className="text-zinc-400 italic mb-8">Sẵn sàng chưa? Nhấn nút bên dưới để quay</p>
-                        <button 
+                        <button
                             onClick={pickRandom}
                             className="group relative px-12 py-4 bg-orange-600 text-white font-black text-xl rounded-full shadow-xl shadow-orange-200 hover:scale-105 active:scale-95 transition-all"
                         >
