@@ -18,6 +18,8 @@ RUN mkdir -p /var/www/database && \
     chown -R www-data:www-data /var/www/database
 COPY . .
 
+RUN mkdir -p database && touch database/database.sqlite && chmod -R 777 database
+
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
 EXPOSE 10000
