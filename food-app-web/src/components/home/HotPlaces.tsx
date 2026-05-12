@@ -18,7 +18,6 @@ interface Place {
   image: string;
 }
 
-
 const categories = [
   { label: "Tất cả", icon: "✨" },
   { label: "Chill một mình", icon: "🍃" },
@@ -54,14 +53,17 @@ export default function HotPlaces() {
   const loadData = useCallback(async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
       setLoading(true);
       const response = await axios.get(`${apiUrl}/api/places`);
-      setPlaces(response.data);
+
+      // Kiểm tra xem dữ liệu nằm trực tiếp trong response.data hay trong response.data.data (phân trang)
+      const result = Array.isArray(response.data) ? response.data : response.data.data;
+      setPlaces(result || []);
+
     } catch (error) {
       console.error("Lỗi khi kết nối Backend:", error);
     } finally {
-      setTimeout(() => setLoading(false), 600);
+      setLoading(false);
     }
   }, []);
 
@@ -73,14 +75,13 @@ export default function HotPlaces() {
   const filteredPlaces = activeCategory === "Tất cả"
     ? places
     : places.filter(place => {
-      try {
-        // Nếu category được lưu dạng JSON string '["Hẹn hò", "Sống ảo"]'
-        const cats = JSON.parse(place.category);
-        return Array.isArray(cats) ? cats.includes(activeCategory) : place.category === activeCategory;
-      } catch (e) {
-        // Nếu category chỉ là chuỗi thường "Hẹn hò"
-        return place.category === activeCategory;
-      }
+      if (!place.category) return false;
+
+      // Chuyển tất cả về chuỗi để an toàn
+      const catString = String(place.category);
+
+      // Kiểm tra nếu chuỗi category có chứa từ khóa activeCategory hay không
+      return catString.includes(activeCategory);
     });
   // 3. Cắt mảng để chỉ lấy đúng số lượng cần hiển thị
   const visiblePlaces = filteredPlaces.slice(0, displayCount);
