@@ -19,7 +19,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:3000')],
+    'allowed_origins' => [
+        'https://food-app-phi-black.vercel.app', // Link trang web của bạn trên Vercel
+        'http://localhost:3000',                // Để bạn vẫn test được dưới máy
+    ],
 
     'allowed_origins_patterns' => [],
 
