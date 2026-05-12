@@ -11,10 +11,11 @@ RUN apt-get update && apt-get install -y \
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /app
-# Tạo thư mục database và file sqlite trống
-RUN mkdir -p database && touch database/database.sqlite && chmod -R 777 database
-
+WORKDIR /var/www
+RUN mkdir -p /var/www/database && \
+    touch /var/www/database/database.sqlite && \
+    chmod -R 775 /var/www/database && \
+    chown -R www-data:www-data /var/www/database
 COPY . .
 
 RUN composer install --no-interaction --optimize-autoloader --no-dev
