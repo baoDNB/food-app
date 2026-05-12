@@ -202,4 +202,8 @@ class PlaceController extends Controller
                 'data' => $place->load('experience') 
             ]);
         }
+    public function notes()
+    {
+        return $this->hasMany(Note::class);
+    }
 }
