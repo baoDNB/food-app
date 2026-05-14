@@ -124,7 +124,7 @@ export const PlaceCard = ({ item, index = 0, setPlaces, variant = 'diary' }: Pla
                         </p>
 
                         <div className="relative flex-1 bg-white p-5 rounded-2xl border border-orange-50 shadow-[inset_0_2px_8px_rgba(0,0,0,0.01)] min-h-[100px]">
-                            <p className="font-['Caveat',cursive] text-2xl text-zinc-700 leading-tight pt-1 line-clamp-3">
+                            <p className=" text-1xl text-zinc-500 leading-tight pt-1 line-clamp-3">
                                 {item.description || item.thoughts || "Hôm nay mình đã có một kỷ niệm thật đẹp tại đây..."}
                             </p>
                         </div>
