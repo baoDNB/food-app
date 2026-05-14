@@ -37,7 +37,7 @@ export default function Home() {
     setTimeout(async () => {
       try {
         const response = await fetch(
-          `http://localhost:8000/api/places?vibe=${encodeURIComponent(mood.query)}`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/places?vibe=${encodeURIComponent(mood.query)}`
         );
 
         if (!response.ok) {
