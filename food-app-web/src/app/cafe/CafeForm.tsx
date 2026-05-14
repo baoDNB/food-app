@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Toaster, toast } from 'react-hot-toast';
 
 interface CafeFormProps {
     initialData?: any;
@@ -80,151 +81,167 @@ export default function CafeForm({ initialData, onClose, onSuccess }: CafeFormPr
             });
 
             if (res.ok) {
-                onSuccess();
+                toast.success('Đã lưu vào sổ tay rồi nhé! ✨', {
+                    duration: 3000,
+                    position: 'top-center',
+                    style: {
+                        background: '#fbf2ed',
+                        color: '#ab3500',
+                        fontFamily: 'Caveat, cursive',
+                        fontSize: '1.2rem',
+                        border: '2px solid #ab3500'
+                    },
+                });
+                // Đợi một chút cho người dùng kịp nhìn thấy thông báo rồi mới đóng form
+                setTimeout(() => onSuccess(), 1500);
             } else {
-                const err = await res.json();
-                alert("Lỗi: " + (err.message || "Không thể lưu"));
+                toast.error('Có lỗi gì đó rồi, thử lại sau nha!');
             }
         } catch (error) {
-            console.error(error);
+            toast.error('Lỗi kết nối server!');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* CỘT TRÁI: Ảnh và thông tin cơ bản */}
-            <div className="lg:col-span-5 space-y-6">
-                <div className="relative bg-white p-3 shadow-sm rounded-2xl rotate-1 border-2 border-dashed border-[#e1bfb5] overflow-hidden">
-                    <div className="aspect-[4/5] bg-[#fbf2ed] flex flex-col items-center justify-center rounded-xl overflow-hidden relative">
-                        {previewUrl ? (
-                            <img src={previewUrl} className="w-full h-full object-cover" alt="Preview" />
-                        ) : (
-                            <span className="material-symbols-outlined text-4xl text-[#e1bfb5]">add_a_photo</span>
-                        )}
+        <>
+            <Toaster />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* CỘT TRÁI: Ảnh và thông tin cơ bản */}
+                <div className="lg:col-span-5 space-y-6">
+                    <div className="relative bg-white p-3 shadow-sm rounded-2xl rotate-1 border-2 border-dashed border-[#e1bfb5] overflow-hidden">
+                        <div className="aspect-[4/5] bg-[#fbf2ed] flex flex-col items-center justify-center rounded-xl overflow-hidden relative">
+                            {previewUrl ? (
+                                <img src={previewUrl} className="w-full h-full object-cover" alt="Preview" />
+                            ) : (
+                                <span className="material-symbols-outlined text-4xl text-[#e1bfb5]">add_a_photo</span>
+                            )}
+                        </div>
                     </div>
-                </div>
 
-                <div className="space-y-4">
-                    <input
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        placeholder="Tên quán..."
-                        className="w-full bg-[#fbf2ed] rounded-xl p-4 outline-none focus:ring-2 focus:ring-[#ff6b35] font-bold"
-                    />
-                    <input
-                        name="address"
-                        value={formData.address}
-                        onChange={handleInputChange}
-                        placeholder="Địa chỉ..."
-                        className="w-full bg-[#fbf2ed] rounded-xl p-4 outline-none focus:ring-2 focus:ring-[#ff6b35] text-sm"
-                    />
-
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-bold uppercase text-gray-400 ml-2">Mở cửa</label>
+                    <div className="space-y-4">
                         <input
-                            type="time"
-                            name="opening_hours"
-                            value={formData.opening_hours}
+                            name="name"
+                            value={formData.name}
                             onChange={handleInputChange}
-                            className="w-full bg-[#fbf2ed] rounded-xl p-3 outline-none text-sm"
+                            placeholder="Tên quán..."
+                            className="w-full bg-[#fbf2ed] rounded-xl p-4 outline-none focus:ring-2 focus:ring-[#ff6b35] font-bold"
                         />
-                    </div>
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-bold uppercase text-gray-400 ml-2">Đóng cửa</label>
                         <input
-                            type="time"
-                            name="closing_hours"
-                            value={formData.closing_hours}
+                            name="address"
+                            value={formData.address}
                             onChange={handleInputChange}
-                            className="w-full bg-[#fbf2ed] rounded-xl p-3 outline-none text-sm"
+                            placeholder="Địa chỉ..."
+                            className="w-full bg-[#fbf2ed] rounded-xl p-4 outline-none focus:ring-2 focus:ring-[#ff6b35] text-sm"
                         />
-                    </div>
-                </div>
-            </div>
 
-            {/* CỘT PHẢI: Checklist & Vibe (Style giấy tập) */}
-            <div className="lg:col-span-7 space-y-8 p-1 rounded-2xl" style={{ backgroundImage: 'radial-gradient(#d1cfcd 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
-
-                {/* Checklist */}
-                <section>
-                    <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#ab3500]">
-                        <span className="material-symbols-outlined">task_alt</span> Trải nghiệm
-                    </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {Object.keys(checklist).map((key) => (
-                            <label key={key} className="flex items-center gap-3 p-3 bg-white/80 border border-[#efe6e2] rounded-xl cursor-pointer hover:bg-white transition-all">
-                                <input
-                                    type="checkbox"
-                                    checked={checklist[key as keyof typeof checklist]}
-                                    onChange={() => handleChecklistChange(key as keyof typeof checklist)}
-                                    className="w-4 h-4 accent-[#ab3500]"
-                                />
-                                <span className="text-sm capitalize">{key.replace('_', ' ')}</span>
-                            </label>
-                        ))}
-                    </div>
-                </section>
-
-                {/* Vibe Scales */}
-                <section className="space-y-5">
-                    <h2 className="text-lg font-bold flex items-center gap-2 text-[#ab3500]">
-                        <span className="material-symbols-outlined">tune</span> Không gian
-                    </h2>
-                    {[
-                        { id: 'vibe_sound', left: 'Yên tĩnh', right: 'Ồn ào' },
-                        { id: 'vibe_density', left: 'Thoáng', right: 'Đông đúc' },
-                        { id: 'vibe_fit', left: 'Cá nhân', right: 'Đi nhóm' }
-                    ].map((scale) => (
-                        <div key={scale.id}>
-                            <div className="flex justify-between text-[10px] font-bold uppercase text-gray-400 mb-1">
-                                <span>{scale.left}</span>
-                                <span>{scale.right}</span>
-                            </div>
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase text-gray-400 ml-2">Mở cửa</label>
                             <input
-                                name={scale.id}
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={formData[scale.id as keyof typeof formData] as number}
+                                type="time"
+                                name="opening_hours"
+                                value={formData.opening_hours}
                                 onChange={handleInputChange}
-                                className="w-full h-1.5 bg-[#e9e1dc] rounded-lg appearance-none accent-[#ab3500] cursor-pointer"
+                                className="w-full bg-[#fbf2ed] rounded-xl p-3 outline-none text-sm"
                             />
                         </div>
-                    ))}
-                </section>
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-bold uppercase text-gray-400 ml-2">Đóng cửa</label>
+                            <input
+                                type="time"
+                                name="closing_hours"
+                                value={formData.closing_hours}
+                                onChange={handleInputChange}
+                                className="w-full bg-[#fbf2ed] rounded-xl p-3 outline-none text-sm"
+                            />
+                        </div>
+                    </div>
+                </div>
 
-                {/* Description */}
-                <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    rows={3}
-                    placeholder="Ghi chú thêm về cảm nhận của bạn..."
-                    className="w-full bg-[#fbf2ed] p-4 rounded-xl outline-none text-sm border-l-4 border-[#ab3500]"
-                />
+                {/* CỘT PHẢI: Checklist & Vibe (Style giấy tập) */}
+                <div className="lg:col-span-7 space-y-8 p-1 rounded-2xl" style={{ backgroundImage: 'radial-gradient(#d1cfcd 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
 
-                {/* Buttons */}
-                <div className="flex gap-3 pt-4">
-                    <button
-                        type="button"
-                        onClick={handleSubmit}
-                        disabled={loading}
-                        className="flex-1 py-3 bg-[#ab3500] text-white rounded-xl font-bold shadow-lg hover:bg-[#8e2c00] transition-all disabled:bg-gray-300"
-                    >
-                        {loading ? "Đang lưu..." : "Cập nhật thay đổi"}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="px-6 py-3 text-gray-400 font-bold hover:text-black transition-colors"
-                    >
-                        Hủy
-                    </button>
+                    {/* Checklist */}
+                    <section>
+                        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#ab3500]">
+                            <span className="material-symbols-outlined">task_alt</span> Trải nghiệm
+                        </h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {Object.keys(checklist).map((key) => (
+                                <label key={key} className="flex items-center gap-3 p-3 bg-white/80 border border-[#efe6e2] rounded-xl cursor-pointer hover:bg-white transition-all">
+                                    <input
+                                        type="checkbox"
+                                        checked={checklist[key as keyof typeof checklist]}
+                                        onChange={() => handleChecklistChange(key as keyof typeof checklist)}
+                                        className="w-4 h-4 accent-[#ab3500]"
+                                    />
+                                    <span className="text-sm capitalize">{key.replace('_', ' ')}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* Vibe Scales */}
+                    <section className="space-y-5">
+                        <h2 className="text-lg font-bold flex items-center gap-2 text-[#ab3500]">
+                            <span className="material-symbols-outlined">tune</span> Không gian
+                        </h2>
+                        {[
+                            { id: 'vibe_sound', left: 'Yên tĩnh', right: 'Ồn ào' },
+                            { id: 'vibe_density', left: 'Thoáng', right: 'Đông đúc' },
+                            { id: 'vibe_fit', left: 'Cá nhân', right: 'Đi nhóm' }
+                        ].map((scale) => (
+                            <div key={scale.id}>
+                                <div className="flex justify-between text-[10px] font-bold uppercase text-gray-400 mb-1">
+                                    <span>{scale.left}</span>
+                                    <span>{scale.right}</span>
+                                </div>
+                                <input
+                                    name={scale.id}
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={formData[scale.id as keyof typeof formData] as number}
+                                    onChange={handleInputChange}
+                                    className="w-full h-1.5 bg-[#e9e1dc] rounded-lg appearance-none accent-[#ab3500] cursor-pointer"
+                                />
+                            </div>
+                        ))}
+                    </section>
+
+                    {/* Description */}
+                    <textarea
+                        name="description"
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        rows={3}
+                        placeholder="Ghi chú thêm về cảm nhận của bạn..."
+                        className="w-full bg-[#fbf2ed] p-4 rounded-xl outline-none text-sm border-l-4 border-[#ab3500]"
+                    />
+
+                    {/* Buttons */}
+                    <div className="flex gap-3 pt-4">
+                        <button
+                            type="button"
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className="flex-1 py-3 bg-[#ab3500] text-white rounded-xl font-bold shadow-lg hover:bg-[#8e2c00] transition-all disabled:bg-gray-300"
+                        >
+                            {loading ? "Đang lưu..." : "Cập nhật thay đổi"}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-6 py-3 text-gray-400 font-bold hover:text-black transition-colors"
+                        >
+                            Hủy 
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+
+        </>
+
     );
 }

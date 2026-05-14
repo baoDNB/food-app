@@ -65,10 +65,7 @@ class PlaceController extends Controller
             'visit_count'   => 1,                                      
         ]);
 
-        // 6. Tạo ghi chú đầu tiên
-        if ($request->description) {
-            $place->notes()->create(['note' => $request->description]);
-        }
+
 
         // 7. Tạo bản ghi trải nghiệm (Experience)
         $place->experience()->create([
@@ -76,6 +73,7 @@ class PlaceController extends Controller
             'tried_signature' => $checklist['tried_signature'] ?? false,
             'took_photo'      => $checklist['took_photo'] ?? false,
             'will_return'     => $checklist['will_return'] ?? false,
+            
         ]);
 
         return response()->json([

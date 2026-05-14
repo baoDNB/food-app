@@ -24,6 +24,7 @@ class Place extends Model
     {
         return $this->hasOne(UserExperience::class);
     }
+    
 
 
 }
