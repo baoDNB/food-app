@@ -34,10 +34,8 @@ export default function RootLayout({
 
       <body className={`${beVietnamPro.className} antialiased bg-background text-on-background journal-texture min-h-screen relative`}>
         <Header />
-        <div className="pt-20">
+        <div className="pt-20 relative z-0  ">
           {children}
-         
-
         </div>
         
 
