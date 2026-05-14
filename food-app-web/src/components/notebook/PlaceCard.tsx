@@ -95,7 +95,7 @@ export const PlaceCard = ({ item, index = 0, setPlaces, variant = 'diary' }: Pla
         const entryDate = formatDiaryDate(item.created_at);
 
         return (
-            <div className="relative group mb-4 animate-in fade-in slide-in-from-bottom-3 duration-500">
+            <div className="relative group mb-4 animate-in fade-in slide-in-from-bottom-3 duration-500 h-[580px]">
                 <div className={`absolute inset-0 bg-white rounded-[2.5rem] shadow-[0_8px_25px_rgba(0,0,0,0.03)] transform transition-transform duration-500 group-hover:rotate-0 ${index % 2 === 0 ? 'rotate-1' : '-rotate-1'}`}></div>
 
                 <div className="relative p-6 flex flex-col h-full bg-[#fcfaf8] rounded-[2.5rem] border border-orange-100/50 overflow-hidden">
@@ -145,7 +145,7 @@ export const PlaceCard = ({ item, index = 0, setPlaces, variant = 'diary' }: Pla
 
     // --- 2. GIAO DIỆN WISHLIST (KHÔNG CÓ NGÀY THÁNG) ---
     return (
-        <div className="group relative bg-white p-4 rounded-[2.5rem] shadow-sm border border-orange-50 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full flex flex-col animate-in fade-in duration-500">
+        <div className="group relative bg-white p-4 rounded-[2.5rem] shadow-sm border border-orange-50 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-[400px] flex flex-col animate-in fade-in duration-500">
             <div className="h-48 rounded-[2rem] overflow-hidden mb-5 relative">
                 <img
                     src={item.image_url || item.image}
