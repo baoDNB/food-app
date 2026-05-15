@@ -38,9 +38,9 @@ const Header = () => {
           <button className="p-2 text-[#FF6B35] hover:bg-orange-50 rounded-full transition-colors active:scale-90 duration-200">
             <span className="material-symbols-outlined" data-icon="favorite">favorite</span>
           </button>
-          <div className="w-10 h-10 rounded-full bg-primary-fixed overflow-hidden border-2 border-primary-container">
+          {/* <div className="w-10 h-10 rounded-full bg-primary-fixed overflow-hidden border-2 border-primary-container">
             <img src="anh.jpg" alt="Avatar" className="w-full h-full object-cover" />
-          </div>
+          </div> */}
         </div>
       </nav>
     </header>
