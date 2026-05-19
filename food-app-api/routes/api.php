@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\PlaceController;
 use Illuminate\Support\Facades\Route;
 use App\Models\Place; 
 use Illuminate\Http\Request;
+use App\Http\Controllers\NotificationController;
+
 
 
 Route::get('/places', [PlaceController::class, 'index']);
@@ -16,3 +18,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/places/{id}/check', [PlaceController::class, 'updateChecklist']);
 });
 Route::delete('/places/{id}', [PlaceController::class, 'destroy']);
+
+Route::get('/notifications', [NotificationController::class, 'index']);
+Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);

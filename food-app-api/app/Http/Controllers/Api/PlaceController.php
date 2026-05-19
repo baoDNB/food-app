@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notification;
 use App\Models\Place;
 use Illuminate\Http\Request;
 use App\Models\UserExperience; 
@@ -76,6 +77,12 @@ class PlaceController extends Controller
             
         ]);
 
+        Notification::create([
+            'title' => 'Sổ tay vừa dày thêm! ✨',
+            'message' => "Bạn vừa lưu thành công quán '{$place->name}' vào danh sách.",
+            'type' => 'system',
+        ]);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Đã thêm quán mới vào sổ tay!',
@@ -139,23 +146,42 @@ class PlaceController extends Controller
 
     public function toggleFavorite(Request $request, $id){
         try {
-            // Log thử xem dữ liệu Next.js gửi lên có đúng không
-            \Log::info("Place ID: $id - Status: " . $request->will_return);
+            // 1. Phải tìm Quán đó trước để lấy được Tên quán (cho thông báo)
+            $place = Place::findOrFail($id); 
 
+            $isFavorited = $request->will_return; // Lấy trạng thái từ Next.js gửi lên
+
+            // 2. Cập nhật hoặc tạo mới trải nghiệm
             $experience = UserExperience::updateOrCreate(
-                ['place_id' => $id], // Điều kiện để tìm bản ghi cũ
+                ['place_id' => $id],
                 [
-                    'will_return' => $request->will_return,
-                    'is_visited' => true, // Tự động đánh dấu đã đi khi thích
-                    'note' => $request->will_return ? "Đã thích vào " . now()->format('d/m/Y') : null
+                    'will_return' => $isFavorited,
+                    'is_visited' => true, 
+                    'note' => $isFavorited ? "Đã thích vào " . now()->format('d/m/Y') : null
                 ]
             );
+
+            // 3. Chỉ tạo thông báo KHI họ nhấn THÍCH (true)
+            if ($isFavorited) {
+                Notification::create([
+                    'title' => 'Món mới vào Wishlist! ❤️',
+                    'message' => "Bạn vừa thêm '{$place->name}' vào danh sách quán định quay lại.",
+                    'type' => 'reminder',
+                ]);
+            } else {
+                // Tùy chọn: Thông báo khi gỡ khỏi wishlist
+                Notification::create([
+                    'title' => 'Nhật ký đã cập nhật! ✍️',
+                    'message' => "Bạn đã gỡ '{$place->name}' khỏi danh sách yêu thích.",
+                    'type' => 'system',
+                ]);
+            }
 
             return response()->json(['success' => true, 'data' => $experience]);
 
         } catch (\Exception $e) {
-            // Trả về lỗi chi tiết để bạn nhìn thấy ở tab Network
-            return response()->json(['error' => $e->getMessage()], 500);
+            \Log::error("Lỗi Favorite: " . $e->getMessage());
+            return response()->json(['error' => "Không tìm thấy quán hoặc lỗi server"], 500);
         }
     }
 
@@ -184,9 +210,7 @@ class PlaceController extends Controller
         ]);
     }
 
-    public function notes(){
-        return $this->hasMany(Note::class);
-    }
+
 
     public function destroy($id) {
         $place = Place::findOrFail($id); // Tìm không thấy sẽ tự văng 404

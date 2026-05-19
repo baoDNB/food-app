@@ -34,32 +34,41 @@ const formatDiaryDate = (isoString?: string) => {
     return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
+// thêm config và hàm hiển thị toast (fallback)
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+
+const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    // dispatch event để hệ thống toast global bắt nếu có, nếu không sẽ fallback alert
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('app:toast', { detail: { message, type } }));
+    } else {
+        // server-side fallback
+        // eslint-disable-next-line no-console
+        console[type === 'error' ? 'error' : 'log'](message);
+    }
+};
+
 export const PlaceCard = ({ item, index = 0, setPlaces, variant = 'diary' }: PlaceCardProps) => {
 
     // Hàm xử lý thả tim
     const toggleFavorite = async (id: number, e: React.MouseEvent) => {
         e.preventDefault();
-
-        // FIX GẠCH ĐỎ: Kiểm tra xem setPlaces có được truyền vào không
         if (!setPlaces) return;
 
         const newStatus = !(item.experience?.will_return || false);
 
-        // Update UI nhanh (Optimistic Update)
-        // Ép kiểu p: Place để trùng khớp với Interface của bạn
-        setPlaces((prev: Place[]) => prev.map(p =>
-            p.id === id
-                ? {
-                    ...p,
-                    experience: { ...(p.experience || {}), will_return: newStatus }
-                }
+        // 1. Optimistic Update (Cập nhật UI ngay lập tức)
+        let prevSnapshot: Place[] | null = null;
+        setPlaces((prev: Place[]) => {
+            prevSnapshot = prev;
+            return prev.map(p => p.id === id
+                ? { ...p, experience: { ...(p.experience || {}), will_return: newStatus } }
                 : p
-        ));
+            );
+        });
 
         try {
-            // Dùng axios hoặc fetch đều được, nhưng hãy dùng đúng URL
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
+            // Lưu ý: Kiểm tra kỹ URL này có khớp với routes/api.php không
             const res = await fetch(`${apiUrl}/api/places/${id}/favorite`, {
                 method: 'POST',
                 headers: {
@@ -69,10 +78,21 @@ export const PlaceCard = ({ item, index = 0, setPlaces, variant = 'diary' }: Pla
                 body: JSON.stringify({ will_return: newStatus })
             });
 
-            if (!res.ok) throw new Error('Server error');
-        } catch (err) {
-            console.error("Lưu DB thất bại:", err);
-            // Có thể rollback UI ở đây nếu cần
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.message || `Server error ${res.status}`);
+            }
+
+            // 2. Thành công: Bắn event làm mới chuông thông báo
+            window.dispatchEvent(new Event("refresh_notifications"));
+            showToast(newStatus ? 'Đã thêm vào wishlist' : 'Đã gỡ khỏi wishlist', 'success');
+
+        } catch (err: any) {
+            console.error("Lưu DB thất bại:", err.message);
+            showToast(err.message || "Không thể kết nối đến máy chủ", "error");
+
+            // 3. Thất bại: Rollback lại trạng thái cũ
+            if (prevSnapshot) setPlaces(prevSnapshot);
         }
     };
     const FavoriteButton = () => (

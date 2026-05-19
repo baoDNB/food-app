@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Notification; // Đảm bảo đã tạo Model này
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,11 +16,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        \App\Models\Notification::create([
+            'title' => 'Chào mừng bạn!',
+            'message' => 'Bắt đầu ghi lại những món ăn ngon hôm nay nhé.',
+            'type' => 'system',
         ]);
     }
 }

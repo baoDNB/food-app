@@ -57,7 +57,6 @@ export default function Home() {
   return (
     <main>
       <Hero />
-
       {!aiResult && !isScanning && (
         <MoodSelector onMoodSelect={handleMoodSelect} />
       )}

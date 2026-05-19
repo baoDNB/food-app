@@ -24,7 +24,10 @@ class Place extends Model
     {
         return $this->hasOne(UserExperience::class);
     }
-    
+    public function notes()
+    {
+        return $this->hasMany(Note::class);
+    }
 
 
 }

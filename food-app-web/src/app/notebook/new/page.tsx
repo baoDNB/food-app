@@ -147,10 +147,21 @@ export default function AddNewPlacePage() {
                 router.push(`/cafe/${responseData.id || ''}`);
                 router.refresh();
             } else {
-                console.error("Server Validation Errors:", responseData.errors);
-                // Hiển thị lỗi validation cụ thể nếu có
-                const msg = responseData.message || "Lỗi lưu dữ liệu";
-                showToast(msg, "error");
+                // 1. Log toàn bộ responseData để debug dễ hơn
+                console.error("Server Response Error:", responseData);
+
+                // 2. Lấy thông báo lỗi một cách thông minh
+                let errorMsg = "Lỗi lưu dữ liệu";
+
+                if (responseData.errors) {
+                    // Nếu có lỗi validation (mảng các lỗi)
+                    errorMsg = Object.values(responseData.errors).flat().join(', ');
+                } else if (responseData.message) {
+                    // Nếu là lỗi logic mình tự viết (như lỗi trùng địa chỉ)
+                    errorMsg = responseData.message;
+                }
+
+                showToast(errorMsg, "error");
             }
         } catch (error: any) {
             console.error("Lỗi thực thi:", error);
